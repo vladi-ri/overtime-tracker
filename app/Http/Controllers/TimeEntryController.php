@@ -9,6 +9,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
+/**
+ * Class TimeEntryController
+ * 
+ * This class manages time entries for users, allowing them to create, edit,
+ * update, and delete their time entries. It also calculates overtime and
+ * monthly limits based on the user's hourly wage and minijob earnings limit.
+ * 
+ * @extends Controller
+ * @package App\Controllers
+ * @author  Vladislav Riemer <riemer-vladi@web.de>
+ */
 class TimeEntryController extends Controller
 {
     /**
