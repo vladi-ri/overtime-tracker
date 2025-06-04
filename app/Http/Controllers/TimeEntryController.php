@@ -12,14 +12,24 @@ use Illuminate\View\View;
 class TimeEntryController extends Controller
 {
     /**
-     * The monthly limit for hours worked.
+     * Hourly wage
      * 
      * @access private
      * @var    int
      * 
-     * @default 39
+     * @default 14
      */
-    private int $_monthlyLimit = 39;
+    private int $_hourlyWage   = 14;
+
+    /**
+     * Current minijob monthly limit
+     * 
+     * @access private
+     * @var    int
+     * 
+     * @default 556
+     */
+    private int $_limitMinijob = 556;
 
     /**
      * Display the form for creating a new time entry.
@@ -39,7 +49,7 @@ class TimeEntryController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        $monthlyLimit     = $this->_monthlyLimit;
+        $monthlyLimit     = $this->calculateMonthlyLimit();
         $totalWorked      = $entries->sum('hours_worked');
         $overtime         = max(0, $totalWorked - $monthlyLimit);
 
@@ -144,11 +154,22 @@ class TimeEntryController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
-        $monthlyLimit = $this->_monthlyLimit;
+        $monthlyLimit = $this->calculateMonthlyLimit();
         $totalWorked  = $entries->sum('hours_worked');
         $overtime     = max(0, $totalWorked - $monthlyLimit);
 
-        return view('create', compact('entries', 'totalWorked', 'overtime', 'monthlyLimit', 'month', 'year', 'entryToEdit'));
+        return view(
+            'create',
+            compact(
+                'entries',
+                'totalWorked',
+                'overtime',
+                'monthlyLimit',
+                'month',
+                'year',
+                'entryToEdit'
+            )
+        );
     }
 
     /**
@@ -222,25 +243,55 @@ class TimeEntryController extends Controller
     }
 
     /**
+     * Get the hourly wage.
+     *
+     * @access public
+     * @return int
+     */
+    public function getHourlyWage() : int {
+        return $this->_hourlyWage;
+    }
+    /**
+     * Get the limit for minijob earnings.
+     *
+     * @access public
+     * @return int
+     */
+    public function getMinijobLimit() : int {
+        return $this->_limitMinijob;
+    }
+
+    /**
+     * Set the hourly wage.
+     *
+     * @param int $wage The new hourly wage
+     * 
+     * @access public
+     * @return void
+     */
+    public function setHourlyWage(int $wage) : void {
+        $this->_hourlyWage = $wage;
+    }
+    /**
+     * Set the limit for minijob wage.
+     *
+     * @param int $limit The new limit for minijob wage
+     * 
+     * @access public
+     * @return void
+     */
+    public function setMinijobLimit(int $limit) : void {
+        $this->_limitMinijob = $limit;
+    }
+
+    /**
      * Get the monthly limit for hours worked.
      *
      * @access public
      * @return int
      */
-    public function getMonthlyLimit() : int {
-        return $this->_monthlyLimit;
-    }
-
-    /**
-     * Set the monthly limit for hours worked.
-     *
-     * @param int $limit The new monthly limit
-     * 
-     * @access public
-     * @return void
-     */
-    public function setMonthlyLimit(int $limit) : void {
-        $this->_monthlyLimit = $limit;
+    public function calculateMonthlyLimit() : int {
+        return $this->_limitMinijob / $this->_hourlyWage;
     }
 
     /**
