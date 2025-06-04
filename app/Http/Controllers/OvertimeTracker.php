@@ -24,10 +24,37 @@ use App\Models\TimeEntry;
  */
 class OvertimeTracker extends Controller
 {
+    /**
+     * User ID for which to track overtime.
+     * 
+     * @var int $userID
+     * @access protected
+     */
     protected int $userID;
+
+    /**
+     * Month for which to track overtime.
+     * 
+     * @var int $month
+     * @access protected
+     */
     protected int $month;
+
+    /**
+     * Year for which to track overtime.
+     * 
+     * @var int $year
+     * @access protected
+     */
     protected int $year;
-    protected int $standardHoursPerMonth = 39;
+
+    /**
+     * Standard hours per month.
+     * 
+     * @var int $standardHoursPerMonth
+     * @access protected
+     */
+    protected int $standardHoursPerMonth;
 
     /**
      * @param int $userID
@@ -35,7 +62,7 @@ class OvertimeTracker extends Controller
      * @param int $year
      * @param int $standardHoursPerMonth (optional, default 39)
      */
-    public function __construct(int $userID, int $month, int $year, int $standardHoursPerMonth = 39) : void {
+    public function __construct(int $userID, int $month, int $year, int $standardHoursPerMonth) : void {
         $this->userID                = $userID;
         $this->month                 = $month;
         $this->year                  = $year;
