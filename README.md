@@ -6,7 +6,9 @@ overtime tracker for working hours
 ### Run locally
 
 In the command line: `php artisan serve`
+
 Open your browser and type in `localhost:8000/time-entry`
+
 For further information look at the official Laravel documentation.
 
 ### /time-entry
