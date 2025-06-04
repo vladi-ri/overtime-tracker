@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\TimeEntryController;
 use App\Models\TimeEntry;
 
 /**
@@ -48,13 +49,16 @@ class OvertimeTracker extends Controller
      * @return float
      */
     public function getMonthlyOvertime() : float {
-        $entries = TimeEntry::where('user_id', $this->userID)
+        $timeEntryCtrl         = new TimeEntryController();
+        $standardHoursPerMonth = $timeEntryCtrl->calculateMonthlyLimit();
+
+        $entries               = TimeEntry::where('user_id', $this->userID)
             ->whereMonth('date', $this->month)
             ->whereYear('date', $this->year)
             ->get();
 
-        $totalWorked = $entries->sum('hours_worked');
-        $overtime = max(0, $totalWorked - $this->standardHoursPerMonth);
+        $totalWorked           = $entries->sum('hours_worked');
+        $overtime              = max(0, $totalWorked - $standardHoursPerMonth);
 
         return $overtime;
     }
