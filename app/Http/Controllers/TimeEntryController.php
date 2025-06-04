@@ -314,7 +314,10 @@ class TimeEntryController extends Controller
      * @return \Carbon\Carbon|null
      */
     private function _parseTime($time) : ?\Carbon\Carbon {
-        if (!$time) return null;
+        if (!$time) {
+            return null;
+        }
+
         // Try H:i:s first, then H:i
         try {
             return \Carbon\Carbon::createFromFormat('H:i:s', $time);
