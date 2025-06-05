@@ -41,5 +41,6 @@ If it is still below the fixed total, the box appears to be green.
 
 ## Upcoming Features
 
+- Export to PDF function
 - Responsive Design for mobile
 - Android version
