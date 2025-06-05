@@ -25,17 +25,9 @@ use App\Models\TimeEntry;
 class OvertimeTracker extends Controller
 {
     /**
-     * User ID for which to track overtime.
-     * 
-     * @var int $userID
-     * @access protected
-     */
-    protected int $userID;
-
-    /**
      * Month for which to track overtime.
      * 
-     * @var int $month
+     * @var    int $month
      * @access protected
      */
     protected int $month;
@@ -43,7 +35,7 @@ class OvertimeTracker extends Controller
     /**
      * Year for which to track overtime.
      * 
-     * @var int $year
+     * @var    int $year
      * @access protected
      */
     protected int $year;
@@ -51,19 +43,19 @@ class OvertimeTracker extends Controller
     /**
      * Standard hours per month.
      * 
-     * @var int $standardHoursPerMonth
+     * @var    int $standardHoursPerMonth
      * @access protected
      */
     protected int $standardHoursPerMonth;
 
     /**
-     * @param int $userID
-     * @param int $month
-     * @param int $year
+     * Constructor to initialize the OvertimeTracker.
+     * 
+     * @param int $month                 (1-12)
+     * @param int $year                  (4-digit year)
      * @param int $standardHoursPerMonth (optional, default 39)
      */
-    public function __construct(int $userID, int $month, int $year, int $standardHoursPerMonth) : void {
-        $this->userID                = $userID;
+    public function __construct(int $month, int $year, int $standardHoursPerMonth) {
         $this->month                 = $month;
         $this->year                  = $year;
         $this->standardHoursPerMonth = $standardHoursPerMonth;
@@ -79,8 +71,7 @@ class OvertimeTracker extends Controller
         $timeEntryCtrl         = new TimeEntryController();
         $standardHoursPerMonth = $timeEntryCtrl->calculateMonthlyLimit();
 
-        $entries               = TimeEntry::where('user_id', $this->userID)
-            ->whereMonth('date', $this->month)
+        $entries               = TimeEntry::whereMonth('date', $this->month)
             ->whereYear('date', $this->year)
             ->get();
 
