@@ -66,7 +66,7 @@
             @endforeach
         </div>
         <select name="year" class="form-select form-select-sm w-auto mb-1" onchange="this.form.submit()">
-            @for($year = 2025; $year <= $currentYear + 2; $year++)
+            @for ($year = 2025; $year <= $currentYear + 2; $year++)
                 <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
             @endfor
         </select>
@@ -133,6 +133,10 @@
         {{ number_format($totalWorkedAll, 2) }} / {{ $totalLimitAll }} hours
         <br>
         <strong>Total overtime:</strong> {{ number_format($totalOvertimeAll, 2) }} hours
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ route('edit-defaults') }}" class="btn btn-secondary">Edit Default Values</a>
     </div>
 </div>
 @endsection

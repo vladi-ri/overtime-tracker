@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Models\TimeEntry;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -260,7 +261,7 @@ class TimeEntryController extends Controller
      * @return int
      */
     public function getHourlyWage() : int {
-        return $this->_hourlyWage;
+        return (int) $this->_getSetting('hourly_wage', 14);
     }
     /**
      * Get the limit for minijob earnings.
@@ -269,7 +270,7 @@ class TimeEntryController extends Controller
      * @return int
      */
     public function getMinijobLimit() : int {
-        return $this->_limitMinijob;
+        return (int) $this->_getSetting('minijob_limit', 556);
     }
 
     /**
@@ -281,7 +282,7 @@ class TimeEntryController extends Controller
      * @return void
      */
     public function setHourlyWage(int $wage) : void {
-        $this->_hourlyWage = $wage;
+        $this->_setSetting('hourly_wage', $wage);
     }
     /**
      * Set the limit for minijob wage.
@@ -292,7 +293,7 @@ class TimeEntryController extends Controller
      * @return void
      */
     public function setMinijobLimit(int $limit) : void {
-        $this->_limitMinijob = $limit;
+        $this->_setSetting('minijob_limit', $limit);
     }
 
     /**
@@ -303,6 +304,78 @@ class TimeEntryController extends Controller
      */
     public function calculateMonthlyLimit() : int {
         return $this->_limitMinijob / $this->_hourlyWage;
+    }
+
+    /**
+     * Show a form to edit default values (hourly wage and minijob limit).
+     *
+     * @access public
+     * @return View
+     */
+    public function getEditDefaultsView() : View {
+        $hourlyWage   = $this->getHourlyWage();
+        $minijobLimit = $this->getMinijobLimit();
+
+        return view(
+            'edit-defaults', [
+                'hourlyWage'   => $hourlyWage,
+                'minijobLimit' => $minijobLimit
+            ]
+        );
+    }
+
+    /**
+     * Update default values (hourly wage and minijob limit).
+     *
+     * @param Request $request The request object containing parameters
+     * 
+     * @access public
+     * @return RedirectResponse
+     */
+    public function updateDefaults(Request $request) : RedirectResponse {
+        $request->validate(
+            [
+                'hourly_wage'   => 'required|integer|min:1',
+                'minijob_limit' => 'required|integer|min:1'
+            ]
+        );
+
+        $this->setHourlyWage((int)$request->hourly_wage);
+        $this->setMinijobLimit((int)$request->minijob_limit);
+
+        return redirect()
+            ->route('edit-defaults')
+            ->with('success', 'Default values updated!');
+    }
+
+    /**
+     * Get a setting value by key, or return a default value if not found.
+     * 
+     * @param string $key     The key of the setting to retrieve
+     * @param mixed  $default The default value to return if the setting is not found
+     * 
+     * @access private
+     * @return int
+     */
+    private function _getSetting(string $key, $default) : int {
+        $setting = Setting::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
+    }
+
+    /**
+     * Set a setting value by key, creating it if it does not exist.
+     * 
+     * @param string $key   The key of the setting to set
+     * @param int    $value The value to set for the setting
+     * 
+     * @access private
+     * @return void
+     */
+    private function _setSetting(string $key, int $value) : void {
+        Setting::updateOrCreate(
+            ['key'   => $key],
+            ['value' => $value]
+        );
     }
 
     /**

@@ -12,3 +12,6 @@ Route::post('/time-entry', [TimeEntryController::class, 'store'])->name('time-en
 Route::get('/time-entry/{id}/edit', [TimeEntryController::class, 'edit'])->name('time-entry.edit');
 Route::put('/time-entry/{id}', [TimeEntryController::class, 'update'])->name('time-entry.update');
 Route::delete('/time-entry/{id}', [TimeEntryController::class, 'destroy'])->name('time-entry.destroy');
+
+Route::get('/edit-defaults', [TimeEntryController::class, 'getEditDefaultsView'])->name('edit-defaults');
+Route::post('/update-defaults', [TimeEntryController::class, 'updateDefaults'])->name('update-defaults');
