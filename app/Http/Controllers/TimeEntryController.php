@@ -18,6 +18,7 @@ use Illuminate\View\View;
  * monthly limits based on the user's hourly wage and minijob earnings limit.
  * 
  * @extends Controller
+ * 
  * @package App\Controllers
  * @author  Vladislav Riemer <riemer-vladi@web.de>
  */
@@ -55,8 +56,7 @@ class TimeEntryController extends Controller
         $month            = $request->input('month', now()->month);
         $year             = $request->input('year', now()->year);
 
-        $entries          = TimeEntry::where('user_id', Auth::id() ?? 1)
-            ->whereMonth('date', $month)
+        $entries          = TimeEntry::whereMonth('date', $month)
             ->whereYear('date', $year)
             ->orderBy('date', 'desc')
             ->get();
@@ -66,13 +66,15 @@ class TimeEntryController extends Controller
         $overtime         = max(0, $totalWorked - $monthlyLimit);
 
         // Calculate total overtime for all months
-        $allEntries       = TimeEntry::where('user_id', Auth::id() ?? 1)->get();
+        $allEntries       = TimeEntry::all();
         $totalWorkedAll   = $allEntries->sum('hours_worked');
 
         // Calculate how many full months are in the data
-        $monthsCount      = $allEntries->groupBy(function($item) {
-            return Carbon::parse($item->date)->format('Y-m');
-        })->count();
+        $monthsCount      = $allEntries->groupBy(
+            function ($item) {
+                return Carbon::parse($item->date)->format('Y-m');
+            }
+        )->count();
         $totalLimitAll    = $monthsCount * $monthlyLimit;
         $totalOvertimeAll = max(0, $totalWorkedAll - $totalLimitAll);
 
@@ -94,7 +96,7 @@ class TimeEntryController extends Controller
     /**
      * Store a new time entry.
      *
-     * @param Request $request
+     * @param Request $request The request object containing parameters
      * 
      * @throws \Illuminate\Validation\ValidationException
      * 
@@ -126,7 +128,6 @@ class TimeEntryController extends Controller
 
         TimeEntry::create(
             [
-                'user_id'       => Auth::id() ?? 1,
                 'date'          => $request->date,
                 'start_time'    => $request->start_time,
                 'end_time'      => $request->end_time,
@@ -160,8 +161,7 @@ class TimeEntryController extends Controller
         $month       = request('month', now()->month);
         $year        = request('year', now()->year);
 
-        $entries = TimeEntry::where('user_id', Auth::id() ?? 1)
-            ->whereMonth('date', $month)
+        $entries = TimeEntry::whereMonth('date', $month)
             ->whereYear('date', $year)
             ->orderBy('date', 'desc')
             ->get();
@@ -246,7 +246,8 @@ class TimeEntryController extends Controller
         $entry->delete();
 
         return redirect()
-            ->route('time-entry.create', [
+            ->route(
+                'time-entry.create', [
                     'month' => $request->input('month', now()->month),
                     'year'  => $request->input('year', now()->year)
                 ]
@@ -386,17 +387,17 @@ class TimeEntryController extends Controller
      * @access private
      * @return \Carbon\Carbon|null
      */
-    private function _parseTime($time) : ?\Carbon\Carbon {
+    private function _parseTime($time) : ?Carbon {
         if (!$time) {
             return null;
         }
 
         // Try H:i:s first, then H:i
         try {
-            return \Carbon\Carbon::createFromFormat('H:i:s', $time);
+            return Carbon::parse($time);
         } catch (\Exception $e) {
             try {
-                return \Carbon\Carbon::createFromFormat('H:i', $time);
+                return Carbon::parse('H:i', $time);
             } catch (\Exception $e) {
                 return null;
             }
