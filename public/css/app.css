@@ -1,0 +1,11 @@
+.main-button,
+select[data-name="year-selection"] {
+    width: 100%;
+}
+
+@media screen and (min-width: 640px) {
+    .main-button,
+    select[data-name="year-selection"] {
+        width: 200px;
+    }
+}

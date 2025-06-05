@@ -2,7 +2,13 @@
 
 @section('content')
 <div class="container">
-    <h2>Track Daily Working Hours</h2>
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <h2>Track Daily Working Hours</h2>
+            </div>
+        </div>
+    </div>
     @if(session('success'))
         <div style="color: green;">{{ session('success') }}</div>
     @endif
@@ -33,19 +39,34 @@
                 @error('break_minutes') <span style="color:red">{{ $message }}</span> @enderror
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">
-            {{ isset($entryToEdit) ? 'Update Entry' : 'Save Entry' }}
-        </button>
-        @if(isset($entryToEdit))
-            <a href="{{ route('time-entry.create') }}" class="btn btn-secondary mt-2 ms-2">Cancel</a>
-        @endif
-        <input type="hidden" name="month" value="{{ request('month', now()->month) }}">
-        <input type="hidden" name="year" value="{{ request('year', now()->year) }}">
+        <div class="row">
+            <div class="col mb-0 d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary mt-2 main-button" data-action={{ isset($entryToEdit) ? 'update' : 'save' }}>
+                    @if (isset($entryToEdit))
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    @else
+                        <i class="fa fa-save"></i>
+                    @endif
+                    {{ isset($entryToEdit) ? 'Update Entry' : 'Save Entry' }}
+                </button>
+                @if(isset($entryToEdit))
+                    <a href="{{ route('time-entry.create') }}" class="btn btn-secondary mt-2 ms-2">Cancel</a>
+                @endif
+                <input type="hidden" name="month" value="{{ request('month', now()->month) }}">
+                <input type="hidden" name="year" value="{{ request('year', now()->year) }}">
+            </div>
+        </div>
     </form>
 
     <hr>
 
-    <h3>View Entries by Month & Year</h3>
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <h3>View Entries by Month & Year</h3>
+            </div>
+        </div>
+    </div>
     <form method="GET" action="{{ route('time-entry.create') }}" class="mb-3 d-flex align-items-end gap-2 flex-wrap">
         @php
             $months = [
@@ -53,19 +74,26 @@
                 5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
                 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
             ];
-            $currentYear = now()->year;
+            $currentYear   = now()->year;
             $selectedMonth = request('month', now()->month);
-            $selectedYear = request('year', $currentYear);
+            $selectedYear  = request('year', $currentYear);
         @endphp
-        <div class="d-flex flex-wrap gap-2 mb-1" role="group" aria-label="Months">
-            @foreach($months as $num => $name)
-                <button type="submit" name="month" value="{{ $num }}"
-                    class="btn btn-outline-secondary btn-sm {{ $selectedMonth == $num ? 'active' : '' }}">
-                    {{ $name }}
-                </button>
-            @endforeach
+        <div class="container m-0 p-0 my-0 px-0" role="group" aria-label="Months">
+            <div class="row g-2 mb-1">
+                @foreach ($months as $num => $name)
+                    @if (($num - 1) % 4 === 0 && $num !== 1)
+                        </div><div class="row g-2 mb-1">
+                    @endif
+                    <div class="col-6 col-md-3 d-grid">
+                        <button type="submit" name="month" value="{{ $num }}"
+                            class="btn btn-outline-secondary btn-sm {{ $selectedMonth == $num ? 'active' : '' }}">
+                            {{ $name }}
+                        </button>
+                    </div>
+                @endforeach
+            </div>
         </div>
-        <select name="year" class="form-select form-select-sm w-auto mb-1" onchange="this.form.submit()">
+        <select name="year" class="form-select form-select-sm my-2 mx-auto" data-name="year-selection" onchange="this.form.submit()">
             @for ($year = 2025; $year <= $currentYear + 2; $year++)
                 <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
             @endfor
@@ -73,7 +101,13 @@
         <noscript><button type="submit" class="btn btn-primary btn-sm">Go</button></noscript>
     </form>
 
-    <h3>Your Entries for {{ $months[$selectedMonth] }} {{ $selectedYear }}</h3>
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <h3>Your Entries for {{ $months[$selectedMonth] }} {{ $selectedYear }}</h3>
+            </div>
+        </div>
+    </div>
     @if(isset($entries) && $entries->count())
         <table class="table table-bordered table-striped" style="background:#fafafa;">
             <thead>
@@ -135,8 +169,11 @@
         <strong>Total overtime:</strong> {{ number_format($totalOvertimeAll, 2) }} hours
     </div>
 
-    <div class="mt-3">
-        <a href="{{ route('edit-defaults') }}" class="btn btn-secondary">Edit Default Values</a>
+    <div class="mt-3 d-flex justify-content-center">
+        <a href="{{ route('edit-defaults') }}" class="btn btn-secondary main-button">
+            <i class="fa fa-edit"></i>
+            Edit Default Values
+        </a>
     </div>
 </div>
 @endsection
