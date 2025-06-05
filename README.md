@@ -5,9 +5,49 @@ overtime tracker for working hours
 
 ### Run locally
 
-In the command line: `php artisan serve`
+Clone repository:
+```
+git clone https://github.com/vladi-ri/overtime-tracker.git
+```
 
-Open your browser and type in `localhost:8000/time-entry`
+For a fresh start after cloning you need to initialize a new laravel project:
+
+In the command line (in your project directory):
+
+Install composer:
+```
+composer install
+```
+
+Copy .env file:
+```
+copy .env.example .env
+```
+
+Generate Laravel application key:
+```
+php artisan key:generate
+```
+
+Clear config cache:
+```
+php artisan config:clear
+```
+
+Migrate database with the existing migrations:
+```
+php artisan migrate
+```
+
+Start local environment:
+```
+php artisan serve
+```
+
+Open your browser and type in
+```
+localhost:8000/time-entry
+```
 
 For further information look at the official Laravel documentation.
 
