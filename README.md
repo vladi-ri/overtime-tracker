@@ -53,6 +53,8 @@ For further information look at the official Laravel documentation.
 
 ### /time-entry
 
+![alt text](public/assets/frontend.png)
+
 Here it is possible to create new time entries.
 
 --
