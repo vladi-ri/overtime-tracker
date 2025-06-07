@@ -15,7 +15,6 @@ class CreateTimeEntriesTable extends Migration
             'time_entries',
             function (Blueprint $table) {
                 $table->id();
-                $table->unsignedBigInteger('user_id');
                 $table->date('date');
                 $table->time('start_time')->nullable();
                 $table->time('end_time')->nullable();

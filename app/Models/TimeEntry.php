@@ -31,7 +31,6 @@ class TimeEntry extends Model
      * @var    array
      */
     protected $fillable = [
-        'user_id',
         'date',
         'start_time',
         'end_time',
