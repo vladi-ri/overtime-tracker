@@ -168,6 +168,10 @@
         <br>
         <strong>Total overtime:</strong> {{ number_format($totalOvertimeAll, 2) }} hours
     </div>
+    <div class="alert {{ $totalOvertimeTillLastMonth > 0 ? 'alert-danger' : 'alert-success' }}">
+        <strong>Total overtime till last month:</strong>
+        {{ number_format($totalOvertimeTillLastMonth, 2) }} hours
+    </div>
 
     <div class="mt-3 d-flex justify-content-center">
         <a href="{{ route('edit-defaults') }}" class="btn btn-secondary main-button">

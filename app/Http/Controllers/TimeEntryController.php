@@ -61,7 +61,19 @@ class TimeEntryController extends Controller
             ->orderBy('date', 'desc')
             ->get();
 
+        // Calculate overtime till last month
+        $entriesTillLastMonth = \App\Models\TimeEntry::where(function($query) use ($year, $month) {
+            $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
+        })->get();
+
+        $monthsCountTillLastMonth = $entriesTillLastMonth->groupBy(function ($item) {
+            return \Carbon\Carbon::parse($item->date)->format('Y-m');
+        })->count();
+
         $monthlyLimit     = $this->calculateMonthlyLimit();
+        $totalWorkedTillLastMonth = $entriesTillLastMonth->sum('hours_worked');
+$totalLimitTillLastMonth = $monthsCountTillLastMonth * $monthlyLimit;
+$totalOvertimeTillLastMonth = max(0, $totalWorkedTillLastMonth - $totalLimitTillLastMonth);
         $totalWorked      = $entries->sum('hours_worked');
         $overtime         = max(0, $totalWorked - $monthlyLimit);
 
@@ -88,7 +100,8 @@ class TimeEntryController extends Controller
                 'year',
                 'totalWorkedAll',
                 'totalOvertimeAll',
-                'totalLimitAll'
+                'totalLimitAll',
+                'totalOvertimeTillLastMonth'
             )
         );
     }
