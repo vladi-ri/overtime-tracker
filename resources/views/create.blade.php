@@ -112,7 +112,7 @@
         <table class="table table-bordered table-striped" style="background:#fafafa;">
             <thead>
                 <tr>
-                    <th>Date</th>
+                    <th style="min-width: 120px;">Date</th>
                     <th>Start</th>
                     <th>End</th>
                     <th>Break (min)</th>
