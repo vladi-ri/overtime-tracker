@@ -5,6 +5,8 @@
         'start_time'                     => 'Start Time',
         'end_time'                       => 'End Time',
         'break_minutes'                  => 'Break (minutes)',
+        'working_place'                  => 'Working Place',
+        'working_place_default'          => 'Wirtshaus',
         'save_entry'                     => 'Save Entry',
         'update_entry'                   => 'Update Entry',
         'cancel'                         => 'Cancel',

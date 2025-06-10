@@ -40,6 +40,16 @@
             </div>
         </div>
         <div class="row">
+            <div class="col-md-3 mb-2 mb-md-0">
+                <label for="working_place" class="form-label">{{ __('messages.working_place') ?? 'Workplace' }}</label>
+                <select name="working_place" id="working_place" class="form-select" required>
+                    <option value="Wirtshaus" {{ old('working_place', $entryToEdit->working_place ?? $workingPlace ?? __('messages.working_place_default')) == 'Wirtshaus' ? 'selected' : '' }}>{{ __('messages.working_place_default') }}</option>
+                    <option value="Naumburger" {{ old('working_place', $entryToEdit->working_place ?? $workingPlace ?? __('messages.working_place_default')) == 'Naumburger' ? 'selected' : '' }}>Naumburger</option>
+                </select>
+                @error('working_place') <span style="color:red">{{ $message }}</span> @enderror
+            </div>
+        </div>
+        <div class="row">
             <div class="col mb-0 d-flex justify-content-center">
                 <button type="submit" class="btn btn-primary mt-2 main-button" data-action={{ isset($entryToEdit) ? 'update' : 'save' }}>
                     @if (isset($entryToEdit))
@@ -150,6 +160,7 @@
                     <th>{{ __('messages.end_time') }}</th>
                     <th>{{ __('messages.break_min') }}</th>
                     <th>{{ __('messages.hours_worked') }}</th>
+                    <th>{{ __('messages.working_place') }}</th>
                     <th>{{ __('messages.actions') }}</th>
                 </tr>
             </thead>
@@ -161,6 +172,7 @@
                         <td>{{ \Carbon\Carbon::createFromFormat('H:i:s', $entry->end_time)->format('H:i') }}</td>
                         <td>{{ $entry->break_minutes }}</td>
                         <td>{{ $entry->hours_worked }}</td>
+                        <td>{{ $entry->working_place }}</td>
                         <td>
                             <div class="d-flex gap-2">
                                 <a href="{{ route('time-entry.edit', ['id' => $entry->id, 'month' => request('month', now()->month), 'year' => request('year', now()->year)]) }}"

@@ -47,4 +47,32 @@ class TimeEntry extends Model
     public function user() : BelongsTo {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the table name for the model.
+     *
+     * @access public
+     * @return string
+     */
+    public function getTableName() : string {
+        return $this->_TABLE_NAME;
+    }
+
+    /**
+     * Get column names for the model.
+     *
+     * @access public
+     * @return string
+     */
+    public function getColumnName(string $columnName) : string {
+        switch ($columnName) {
+            case 'date':          $columnName = 'date'; break;
+            case 'start_time':    $columnName = 'start_time'; break;
+            case 'end_time':      $columnName = 'end_time'; break;
+            case 'break_minutes': $columnName = 'break_minutes'; break;
+            case 'hours_worked':  $columnName = 'hours_worked'; break;
+            default:              $columnName = 'unknown_column'; break;
+        }
+        return $columnName;
+    }
 }
