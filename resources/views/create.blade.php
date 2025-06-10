@@ -111,7 +111,7 @@
                             type="submit"
                             name="month"
                             value="{{ $num }}"
-                            class="btn btn-outline-secondary btn-sm {{ $months[$selectedMonth] == $num ? 'active' : '' }}"
+                            class="btn btn-outline-secondary btn-sm {{ $selectedMonth == $num ? 'active' : '' }}"
                         >
                             {{ $name }}
                         </button>
