@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use App\Models\TimeEntry;
+
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\App;
 use Illuminate\View\View;
 
 /**
@@ -53,42 +54,48 @@ class TimeEntryController extends Controller
      * @return View
      */
     public function create(Request $request) : View {
-        $month            = $request->input('month', now()->month);
-        $year             = $request->input('year', now()->year);
+        $month                      = $request->input('month', now()->month);
+        $year                       = $request->input('year', now()->year);
+        $lang                       = $request->input('lang') ?? 'en';
+        App::setLocale($lang);
+        $selectedMonth              = $month;
+        $selectedYear               = $year;
+        $currentYear                = now()->year;
+        $months                     = __('messages.months');
 
-        $entries          = TimeEntry::whereMonth('date', $month)
+        $entries                    = TimeEntry::whereMonth('date', $month)
             ->whereYear('date', $year)
             ->orderBy('date', 'desc')
             ->get();
 
         // Calculate overtime till last month
-        $entriesTillLastMonth = \App\Models\TimeEntry::where(function($query) use ($year, $month) {
+        $entriesTillLastMonth       = TimeEntry::where(function($query) use ($year, $month) {
             $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
         })->get();
 
-        $monthsCountTillLastMonth = $entriesTillLastMonth->groupBy(function ($item) {
-            return \Carbon\Carbon::parse($item->date)->format('Y-m');
+        $monthsCountTillLastMonth   = $entriesTillLastMonth->groupBy(function ($item) {
+            return Carbon::parse($item->date)->format('Y-m');
         })->count();
 
-        $monthlyLimit     = $this->calculateMonthlyLimit();
-        $totalWorkedTillLastMonth = $entriesTillLastMonth->sum('hours_worked');
-$totalLimitTillLastMonth = $monthsCountTillLastMonth * $monthlyLimit;
-$totalOvertimeTillLastMonth = max(0, $totalWorkedTillLastMonth - $totalLimitTillLastMonth);
-        $totalWorked      = $entries->sum('hours_worked');
-        $overtime         = max(0, $totalWorked - $monthlyLimit);
+        $monthlyLimit               = $this->calculateMonthlyLimit();
+        $totalWorkedTillLastMonth   = $entriesTillLastMonth->sum('hours_worked');
+        $totalLimitTillLastMonth    = $monthsCountTillLastMonth * $monthlyLimit;
+        $totalOvertimeTillLastMonth = max(0, $totalWorkedTillLastMonth - $totalLimitTillLastMonth);
+        $totalWorked                = $entries->sum('hours_worked');
+        $overtime                   = max(0, $totalWorked - $monthlyLimit);
 
         // Calculate total overtime for all months
-        $allEntries       = TimeEntry::all();
-        $totalWorkedAll   = $allEntries->sum('hours_worked');
+        $allEntries                 = TimeEntry::all();
+        $totalWorkedAll             = $allEntries->sum('hours_worked');
 
         // Calculate how many full months are in the data
-        $monthsCount      = $allEntries->groupBy(
+        $monthsCount                = $allEntries->groupBy(
             function ($item) {
                 return Carbon::parse($item->date)->format('Y-m');
             }
         )->count();
-        $totalLimitAll    = $monthsCount * $monthlyLimit;
-        $totalOvertimeAll = max(0, $totalWorkedAll - $totalLimitAll);
+        $totalLimitAll              = $monthsCount * $monthlyLimit;
+        $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
 
         return view(
             'create', compact(
@@ -96,12 +103,17 @@ $totalOvertimeTillLastMonth = max(0, $totalWorkedTillLastMonth - $totalLimitTill
                 'totalWorked',
                 'overtime',
                 'monthlyLimit',
+                'months',
                 'month',
                 'year',
                 'totalWorkedAll',
                 'totalOvertimeAll',
                 'totalLimitAll',
-                'totalOvertimeTillLastMonth'
+                'totalOvertimeTillLastMonth',
+                'selectedMonth',
+                'selectedYear',
+                'currentYear',
+                'lang'
             )
         );
     }
