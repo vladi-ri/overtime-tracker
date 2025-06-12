@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container container--main">
     <div class="row">
         <div class="col">
             <div class="d-flex justify-content-center align-items-center mb-3">
@@ -151,7 +151,7 @@
             </div>
         </div>
     </div>
-    @if(isset($entries) && $entries->count())
+    @if (isset($entries) && $entries->count())
         <table class="table table-bordered table-striped" style="background:#fafafa;">
             <thead>
                 <tr>
