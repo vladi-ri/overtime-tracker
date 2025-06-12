@@ -69,13 +69,17 @@ class TimeEntryController extends Controller
             ->get();
 
         // Calculate overtime till last month
-        $entriesTillLastMonth       = TimeEntry::where(function($query) use ($year, $month) {
-            $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
-        })->get();
+        $entriesTillLastMonth       = TimeEntry::where(
+            function ($query) use ($year, $month) {
+                $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
+            }
+        )->get();
 
-        $monthsCountTillLastMonth   = $entriesTillLastMonth->groupBy(function ($item) {
-            return Carbon::parse($item->date)->format('Y-m');
-        })->count();
+        $monthsCountTillLastMonth   = $entriesTillLastMonth->groupBy(
+            function ($item) {
+                return Carbon::parse($item->date)->format('Y-m');
+            }
+        )->count();
 
         $monthlyLimit               = $this->calculateMonthlyLimit();
         $totalWorkedTillLastMonth   = $entriesTillLastMonth->sum('hours_worked');
@@ -98,23 +102,23 @@ class TimeEntryController extends Controller
         $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
 
         return view(
-            'create', compact(
-                'entries',
-                'totalWorked',
-                'overtime',
-                'monthlyLimit',
-                'months',
-                'month',
-                'year',
-                'totalWorkedAll',
-                'totalOvertimeAll',
-                'totalLimitAll',
-                'totalOvertimeTillLastMonth',
-                'selectedMonth',
-                'selectedYear',
-                'currentYear',
-                'lang'
-            )
+            'create', [
+                'entries'                    => $entries,
+                'totalWorked'                => $totalWorked,
+                'overtime'                   => $overtime,
+                'monthlyLimit'               => $monthlyLimit,
+                'months'                     => $months,
+                'month'                      => $month,
+                'year'                       => $year,
+                'totalWorkedAll'             => $totalWorkedAll,
+                'totalOvertimeAll'           => $totalOvertimeAll,
+                'totalLimitAll'              => $totalLimitAll,
+                'totalOvertimeTillLastMonth' => $totalOvertimeTillLastMonth,
+                'selectedMonth'              => $selectedMonth,
+                'selectedYear'               => $selectedYear,
+                'currentYear'                => $currentYear,
+                'lang'                       => $lang
+            ]
         );
     }
 
@@ -134,13 +138,15 @@ class TimeEntryController extends Controller
                 'date'          => 'required|date',
                 'start_time'    => 'required|date_format:H:i',
                 'end_time'      => 'required|date_format:H:i|after:start_time',
-                'break_minutes' => 'nullable|integer|min:0|max:480'
+                'break_minutes' => 'nullable|integer|min:0|max:480',
+                'working_place' => 'nullable|string|max:255'
             ]
         );
 
         $start         = $this->_parseTime($request->start_time);
         $end           = $this->_parseTime($request->end_time);
         $break         = (int) $request->break_minutes;
+        $workingPlace  = $request->input('working_place', null);
 
         // Calculate total minutes worked
         $minutesWorked = $start->diffInMinutes($end) - $break;
@@ -157,7 +163,8 @@ class TimeEntryController extends Controller
                 'start_time'    => $request->start_time,
                 'end_time'      => $request->end_time,
                 'hours_worked'  => $hoursWorked,
-                'break_minutes' => $break
+                'break_minutes' => $break,
+                'working_place' => $workingPlace
             ]
         );
 
@@ -180,32 +187,75 @@ class TimeEntryController extends Controller
      * @return View
      */
     public function edit(int $id) : View {
-        $entryToEdit = TimeEntry::findOrFail($id);
+        $entryToEdit                = TimeEntry::findOrFail($id);
+
+        // Calculate total overtime for all months
+        $allEntries                 = TimeEntry::all();
+        $totalWorkedAll             = $allEntries->sum('hours_worked');
+        $monthlyLimit               = $this->calculateMonthlyLimit();
+
+        // Calculate how many full months are in the data
+        $monthsCount                = $allEntries->groupBy(
+            function ($item) {
+                return Carbon::parse($item->date)->format('Y-m');
+            }
+        )->count();
+        $totalLimitAll              = $monthsCount * $monthlyLimit;
 
         // Get current month/year for entries list
-        $month       = request('month', now()->month);
-        $year        = request('year', now()->year);
+        $month         = request('month', now()->month);
+        $year          = request('year', now()->year);
+        $lang          = request('lang', 'en');
+        $selectedMonth = $month;
+        $selectedYear  = $year;
+        $months        = __('messages.months');
 
         $entries = TimeEntry::whereMonth('date', $month)
             ->whereYear('date', $year)
             ->orderBy('date', 'desc')
             ->get();
 
-        $monthlyLimit = $this->calculateMonthlyLimit();
-        $totalWorked  = $entries->sum('hours_worked');
-        $overtime     = max(0, $totalWorked - $monthlyLimit);
+        // Calculate overtime till last month
+        $entriesTillLastMonth       = TimeEntry::where(
+            function ($query) use ($year, $month) {
+                $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
+            }
+        )->get();
+
+        $monthsCountTillLastMonth   = $entriesTillLastMonth->groupBy(
+            function ($item) {
+                return Carbon::parse($item->date)->format('Y-m');
+            }
+        )->count();
+
+        $monthlyLimit               = $this->calculateMonthlyLimit();
+        $totalWorkedTillLastMonth   = $entriesTillLastMonth->sum('hours_worked');
+        $totalLimitTillLastMonth    = $monthsCountTillLastMonth * $monthlyLimit;
+        $totalOvertimeTillLastMonth = max(0, $totalWorkedTillLastMonth - $totalLimitTillLastMonth);
+        $totalWorked                = $entries->sum('hours_worked');
+        $totalLimitAll              = $monthsCount * $monthlyLimit;
+        $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
+        $overtime                   = max(0, $totalWorked - $monthlyLimit);
 
         return view(
-            'create',
-            compact(
-                'entries',
-                'totalWorked',
-                'overtime',
-                'monthlyLimit',
-                'month',
-                'year',
-                'entryToEdit'
-            )
+            'create', [
+                'entries'       => $entries,
+                'totalWorked'   => $totalWorked,
+                'overtime'      => $overtime,
+                'monthlyLimit'  => $monthlyLimit,
+                'month'         => $month,
+                'year'          => $year,
+                'entryToEdit'   => $entryToEdit,
+                'selectedMonth' => $selectedMonth,
+                'selectedYear'  => $selectedYear,
+                'currentYear'   => now()->year,
+                'months'        => $months,
+                'lang'          => $lang,
+                'totalWorkedAll' => $totalWorkedAll,
+                'totalOvertimeAll' => $totalOvertimeAll,
+                'totalOvertimeTillLastMonth' => $totalOvertimeTillLastMonth,
+                'totalLimitAll' => $totalLimitAll
+            ]
         );
     }
 
