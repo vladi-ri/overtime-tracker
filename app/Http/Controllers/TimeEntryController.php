@@ -137,7 +137,7 @@ class TimeEntryController extends Controller
             [
                 'date'          => 'required|date',
                 'start_time'    => 'required|date_format:H:i',
-                'end_time'      => 'required|date_format:H:i|after:start_time',
+                'end_time'      => 'required|date_format:H:i',
                 'break_minutes' => 'nullable|integer|min:0|max:480',
                 'working_place' => 'nullable|string|max:255'
             ]
@@ -145,24 +145,28 @@ class TimeEntryController extends Controller
 
         $start         = $this->_parseTime($request->start_time);
         $end           = $this->_parseTime($request->end_time);
-        $break         = (int) $request->break_minutes;
+
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
         $workingPlace  = $request->input('working_place', null);
 
         // Calculate total minutes worked
-        $minutesWorked = $start->diffInMinutes($end) - $break;
+        $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
+        $hours         = $minutesWorked / 60;
 
         // Prevent negative values
         $minutesWorked = max(0, $minutesWorked);
 
-        // Round hours worked to two decimal places
-        $hoursWorked   = round($minutesWorked / 60, 2);
+        // Always calculate break based on hours worked
+        $break         = $hours <= 6 ? 15 : 30;
 
         TimeEntry::create(
             [
                 'date'          => $request->date,
                 'start_time'    => $request->start_time,
                 'end_time'      => $request->end_time,
-                'hours_worked'  => $hoursWorked,
                 'break_minutes' => $break,
                 'working_place' => $workingPlace
             ]
@@ -239,22 +243,22 @@ class TimeEntryController extends Controller
 
         return view(
             'create', [
-                'entries'       => $entries,
-                'totalWorked'   => $totalWorked,
-                'overtime'      => $overtime,
-                'monthlyLimit'  => $monthlyLimit,
-                'month'         => $month,
-                'year'          => $year,
-                'entryToEdit'   => $entryToEdit,
-                'selectedMonth' => $selectedMonth,
-                'selectedYear'  => $selectedYear,
-                'currentYear'   => now()->year,
-                'months'        => $months,
-                'lang'          => $lang,
-                'totalWorkedAll' => $totalWorkedAll,
-                'totalOvertimeAll' => $totalOvertimeAll,
+                'entries'                    => $entries,
+                'totalWorked'                => $totalWorked,
+                'overtime'                   => $overtime,
+                'monthlyLimit'               => $monthlyLimit,
+                'month'                      => $month,
+                'year'                       => $year,
+                'entryToEdit'                => $entryToEdit,
+                'selectedMonth'              => $selectedMonth,
+                'selectedYear'               => $selectedYear,
+                'currentYear'                => now()->year,
+                'months'                     => $months,
+                'lang'                       => $lang,
+                'totalWorkedAll'             => $totalWorkedAll,
+                'totalOvertimeAll'           => $totalOvertimeAll,
                 'totalOvertimeTillLastMonth' => $totalOvertimeTillLastMonth,
-                'totalLimitAll' => $totalLimitAll
+                'totalLimitAll'              => $totalLimitAll
             ]
         );
     }
@@ -282,10 +286,21 @@ class TimeEntryController extends Controller
 
         $start         = $this->_parseTime($request->start_time);
         $end           = $this->_parseTime($request->end_time);
-        $break         = (int) $request->break_minutes;
-        $minutesWorked = $start->diffInMinutes($end) - $break;
-        $minutesWorked = max(0, $minutesWorked);
-        $hoursWorked   = round($minutesWorked / 60, 2);
+
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
+        // Calculate minutes worked (without break)
+        $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
+
+        // Always recalculate break based on start/end times
+        $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
+        $hours         = $minutesWorked / 60;
+        $break         = $hours <= 6 ? 15 : 30;
+
+        // Now subtract break from minutesWorked (if you need it for other logic)
+        $minutesWorked = max(0, $minutesWorked - $break);
 
         $entry         = TimeEntry::findOrFail($id);
         $entry->update(
@@ -294,7 +309,7 @@ class TimeEntryController extends Controller
                 'start_time'    => $request->start_time,
                 'end_time'      => $request->end_time,
                 'break_minutes' => $break,
-                'hours_worked'  => $hoursWorked
+                'working_place' => $request->input('working_place', null)
             ]
         );
 

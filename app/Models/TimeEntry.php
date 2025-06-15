@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -34,8 +35,7 @@ class TimeEntry extends Model
         'date',
         'start_time',
         'end_time',
-        'break_minutes',
-        'hours_worked'
+        'break_minutes'
     ];
 
     /**
@@ -46,6 +46,35 @@ class TimeEntry extends Model
      */
     public function user() : BelongsTo {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Calculate hours worked based on start_time, end_time, and break_minutes
+     * 
+     * @access public
+     * @return float
+     */
+    public function getHoursWorkedAttribute() : float {
+        if (!$this->start_time || !$this->end_time) {
+            return 0;
+        }
+
+        // Ensure start_time and end_time are Carbon instances
+        $start         = Carbon::parse($this->start_time);
+        $end           = Carbon::parse($this->end_time);
+
+        // If end is before or equal to start, add 1 day to end
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
+        // Calculate the total minutes worked, subtracting break time
+        $break         = (int) $this->break_minutes;
+        $minutesWorked = $start->diffInMinutes($end) - $break;
+        $minutesWorked = max(0, $minutesWorked);
+
+        // Return hours worked as a float, rounded to 2 decimal places
+        return round($minutesWorked / 60, 2);
     }
 
     /**
@@ -70,7 +99,6 @@ class TimeEntry extends Model
             case 'start_time':    $columnName = 'start_time'; break;
             case 'end_time':      $columnName = 'end_time'; break;
             case 'break_minutes': $columnName = 'break_minutes'; break;
-            case 'hours_worked':  $columnName = 'hours_worked'; break;
             default:              $columnName = 'unknown_column'; break;
         }
         return $columnName;

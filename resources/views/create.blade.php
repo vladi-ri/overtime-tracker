@@ -18,29 +18,36 @@
             @method('PUT')
         @endif
         <div class="row mb-2">
-            <div class="col-md-3 mb-2 mb-md-0">
+            <div class="col-md-4 mb-2 mb-md-0">
                 <label for="date" class="form-label">{{ __('messages.date') }}</label>
                 <input type="date" name="date" class="form-control" required value="{{ old('date', $entryToEdit->date ?? '') }}">
                 @error('date') <span style="color:red">{{ $message }}</span> @enderror
             </div>
-            <div class="col-md-3 mb-2 mb-md-0">
+            <div class="col-md-4 mb-2 mb-md-0">
                 <label for="start_time" class="form-label">{{ __('messages.start_time') }}</label>
                 <input type="time" name="start_time" class="form-control" required value="{{ old('start_time', isset($entryToEdit) ? (strlen($entryToEdit->start_time) === 5 ? $entryToEdit->start_time : \Carbon\Carbon::createFromFormat('H:i:s', $entryToEdit->start_time)->format('H:i')) : '') }}">
                 @error('start_time') <span style="color:red">{{ $message }}</span> @enderror
             </div>
-            <div class="col-md-3 mb-2 mb-md-0">
+            <div class="col-md-4 mb-2 mb-md-0">
                 <label for="end_time" class="form-label">{{ __('messages.end_time') }}</label>
                 <input type="time" name="end_time" class="form-control" required value="{{ old('end_time', isset($entryToEdit) ? (strlen($entryToEdit->end_time) === 5 ? $entryToEdit->end_time : \Carbon\Carbon::createFromFormat('H:i:s', $entryToEdit->end_time)->format('H:i')) : '') }}">
                 @error('end_time') <span style="color:red">{{ $message }}</span> @enderror
             </div>
-            <div class="col-md-3">
+            <div class="d-none">
                 <label for="break_minutes" class="form-label">{{ __('messages.break_minutes') }}</label>
-                <input type="number" name="break_minutes" class="form-control" min="0" max="480" step="1" value="{{ old('break_minutes', $entryToEdit->break_minutes ?? 0) }}">
+                <input type="number"
+                       name="break_minutes"
+                       class="form-control"
+                       min="0"
+                       max="480"
+                       step="1"
+                       value="{{ old('break_minutes', $entryToEdit->break_minutes ?? 0) }}"
+                       readonly>
                 @error('break_minutes') <span style="color:red">{{ $message }}</span> @enderror
             </div>
         </div>
         <div class="row">
-            <div class="col-md-3 mb-2 mb-md-0">
+            <div class="col mb-2 mb-md-0">
                 <label for="working_place" class="form-label">{{ __('messages.working_place') ?? 'Workplace' }}</label>
                 <select name="working_place" id="working_place" class="form-select" required>
                     <option value="Wirtshaus" {{ old('working_place', $entryToEdit->working_place ?? $workingPlace ?? __('messages.working_place_default')) == 'Wirtshaus' ? 'selected' : '' }}>{{ __('messages.working_place_default') }}</option>
