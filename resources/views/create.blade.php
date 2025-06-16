@@ -14,24 +14,30 @@
     @endif
     <form method="POST" action="{{ isset($entryToEdit) ? route('time-entry.update', $entryToEdit->id) : route('time-entry.store') }}">
         @csrf
-        @if(isset($entryToEdit))
+        @if (isset($entryToEdit))
             @method('PUT')
         @endif
         <div class="row mb-2">
-            <div class="col-md-4 mb-2 mb-md-0">
+            <div class="col-md-3 mb-2 mb-md-0">
                 <label for="date" class="form-label">{{ __('messages.date') }}</label>
                 <input type="date" name="date" class="form-control" required value="{{ old('date', $entryToEdit->date ?? '') }}">
                 @error('date') <span style="color:red">{{ $message }}</span> @enderror
             </div>
-            <div class="col-md-4 mb-2 mb-md-0">
+            <div class="col-md-3 mb-2 mb-md-0">
                 <label for="start_time" class="form-label">{{ __('messages.start_time') }}</label>
                 <input type="time" name="start_time" class="form-control" required value="{{ old('start_time', isset($entryToEdit) ? (strlen($entryToEdit->start_time) === 5 ? $entryToEdit->start_time : \Carbon\Carbon::createFromFormat('H:i:s', $entryToEdit->start_time)->format('H:i')) : '') }}">
                 @error('start_time') <span style="color:red">{{ $message }}</span> @enderror
             </div>
-            <div class="col-md-4 mb-2 mb-md-0">
+            <div class="col-md-3 mb-2 mb-md-0">
                 <label for="end_time" class="form-label">{{ __('messages.end_time') }}</label>
                 <input type="time" name="end_time" class="form-control" required value="{{ old('end_time', isset($entryToEdit) ? (strlen($entryToEdit->end_time) === 5 ? $entryToEdit->end_time : \Carbon\Carbon::createFromFormat('H:i:s', $entryToEdit->end_time)->format('H:i')) : '') }}">
                 @error('end_time') <span style="color:red">{{ $message }}</span> @enderror
+            </div>
+            <div class="col-md-3 form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="no_break" id="no_break" value="1" {{ old('no_break', isset($entryToEdit) && $entryToEdit->break_minutes == 0 ? 'checked' : '') }}>
+                <label class="form-check-label" for="no_break">
+                    {{ __('messages.no_break') ?? 'No break' }}
+                </label>
             </div>
             <div class="d-none">
                 <label for="break_minutes" class="form-label">{{ __('messages.break_minutes') }}</label>
