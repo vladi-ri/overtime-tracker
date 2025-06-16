@@ -137,9 +137,9 @@
             </div>
         </div>
         <select name="year" class="form-select form-select-sm my-2 mx-auto" data-name="year-selection" onchange="this.form.submit()">
-            @for ($year = 2025; $year <= $currentYear + 2; $year++)
+            @foreach ($years as $year)
                 <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
-            @endfor
+            @endforeach
         </select>
         <noscript><button type="submit" class="btn btn-primary btn-sm">Go</button></noscript>
     </form>
