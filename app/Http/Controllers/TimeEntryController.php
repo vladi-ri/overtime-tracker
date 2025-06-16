@@ -101,6 +101,22 @@ class TimeEntryController extends Controller
         $totalLimitAll              = $monthsCount * $monthlyLimit;
         $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
 
+        // Calculate years for the dropdown from entries in DB
+        $years = $allEntries->groupBy(
+            function ($item) {
+                return Carbon::parse($item->date)->format('Y');
+            }
+        )->keys()
+        ->sort()
+        ->toArray();
+
+        if (!in_array($year, $years)) {
+            $years[] = $year;
+        }
+
+        // Ensure years are sorted in descending order
+        rsort($years);
+
         return view(
             'create', [
                 'entries'                    => $entries,
@@ -110,6 +126,7 @@ class TimeEntryController extends Controller
                 'months'                     => $months,
                 'month'                      => $month,
                 'year'                       => $year,
+                'years'                      => $years,
                 'totalWorkedAll'             => $totalWorkedAll,
                 'totalOvertimeAll'           => $totalOvertimeAll,
                 'totalLimitAll'              => $totalLimitAll,
