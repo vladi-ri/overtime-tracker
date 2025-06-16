@@ -5,6 +5,7 @@
         'start_time'                     => 'Startzeit',
         'end_time'                       => 'Endzeit',
         'break_minutes'                  => 'Pause (Minuten)',
+        'no_break'                       => 'Keine Pause',
         'working_place'                  => 'Arbeitsort',
         'working_place_default'          => 'Wirtshaus',
         'save_entry'                     => 'Eintrag speichern',
