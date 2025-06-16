@@ -101,22 +101,6 @@ class TimeEntryController extends Controller
         $totalLimitAll              = $monthsCount * $monthlyLimit;
         $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
 
-        // Calculate years for the dropdown from entries in DB
-        $years = $allEntries->groupBy(
-            function ($item) {
-                return Carbon::parse($item->date)->format('Y');
-            }
-        )->keys()
-        ->sort()
-        ->toArray();
-
-        if (!in_array($year, $years)) {
-            $years[] = $year;
-        }
-
-        // Ensure years are sorted in descending order
-        rsort($years);
-
         return view(
             'create', [
                 'entries'                    => $entries,
@@ -126,7 +110,6 @@ class TimeEntryController extends Controller
                 'months'                     => $months,
                 'month'                      => $month,
                 'year'                       => $year,
-                'years'                      => $years,
                 'totalWorkedAll'             => $totalWorkedAll,
                 'totalOvertimeAll'           => $totalOvertimeAll,
                 'totalLimitAll'              => $totalLimitAll,
@@ -178,6 +161,11 @@ class TimeEntryController extends Controller
 
         // Always calculate break based on hours worked
         $break         = $hours <= 6 ? 15 : 30;
+
+        // If 'no_break' is set, set break_minutes to 0
+        if ($request->has('no_break')) {
+            $break = 0;
+        }
 
         TimeEntry::create(
             [
@@ -310,16 +298,15 @@ class TimeEntryController extends Controller
 
         // Calculate minutes worked (without break)
         $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
-
-        // Always recalculate break based on start/end times
-        $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
         $hours         = $minutesWorked / 60;
         $break         = $hours <= 6 ? 15 : 30;
 
-        // Now subtract break from minutesWorked (if you need it for other logic)
-        $minutesWorked = max(0, $minutesWorked - $break);
+        // If 'no_break' is set, set break_minutes to 0
+        if ($request->has('no_break')) {
+            $break = 0;
+        }
 
-        $entry         = TimeEntry::findOrFail($id);
+        $entry = TimeEntry::findOrFail($id);
         $entry->update(
             [
                 'date'          => $request->date,
