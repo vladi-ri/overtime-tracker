@@ -29,6 +29,9 @@
         'edit'                           => 'Edit',
         'delete'                         => 'Delete',
         'are_you_sure'                   => 'Are you sure you want to delete this entry?',
+        'current_payout'                 => 'Current Payout Amount',
+        'euro'                           => '€',
+        'rest'                           => 'Total Rest Amount',
         'months'                         => [
             1  => 'January',
             2  => 'February',

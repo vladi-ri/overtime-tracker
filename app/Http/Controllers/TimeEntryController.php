@@ -33,7 +33,7 @@ class TimeEntryController extends Controller
      * 
      * @default 14
      */
-    private int $_hourlyWage   = 14;
+    private int $_HOURLY_WAGE            = 14;
 
     /**
      * Current minijob monthly limit
@@ -43,7 +43,15 @@ class TimeEntryController extends Controller
      * 
      * @default 556
      */
-    private int $_limitMinijob = 556;
+    private int $_LIMIT_MINIJOB          = 556;
+
+    /**
+     * Time selection date key for eloquent queries.
+     * 
+     * @access private
+     * @var    string
+     */
+    private string $_TIME_SELECTION_DATE = 'date';
 
     /**
      * Display the form for creating a new time entry.
@@ -63,15 +71,15 @@ class TimeEntryController extends Controller
         $currentYear                = now()->year;
         $months                     = __('messages.months');
 
-        $entries                    = TimeEntry::whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->orderBy('date', 'desc')
+        $entries                    = TimeEntry::whereMonth($this->_TIME_SELECTION_DATE, $month)
+            ->whereYear($this->_TIME_SELECTION_DATE, $year)
+            ->orderBy($this->_TIME_SELECTION_DATE, 'desc')
             ->get();
 
         // Calculate overtime till last month
         $entriesTillLastMonth       = TimeEntry::where(
             function ($query) use ($year, $month) {
-                $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
+                $query->where($this->_TIME_SELECTION_DATE, '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
             }
         )->get();
 
@@ -101,6 +109,14 @@ class TimeEntryController extends Controller
         $totalLimitAll              = $monthsCount * $monthlyLimit;
         $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
 
+        // Create range of years from first time entry + 5 years
+        $firstEntry                 = TimeEntry::orderBy($this->_TIME_SELECTION_DATE, 'asc')->first();
+        $firstYear                  = $firstEntry ? Carbon::parse($firstEntry->date)->year : now()->year;
+        $years                      = range($firstYear, $firstYear + 4);
+
+        // Get current payout amount
+        $currentPayout              = $this->calculateCurrentPayout();
+
         return view(
             'create', [
                 'entries'                    => $entries,
@@ -110,10 +126,12 @@ class TimeEntryController extends Controller
                 'months'                     => $months,
                 'month'                      => $month,
                 'year'                       => $year,
+                'years'                      => $years,
                 'totalWorkedAll'             => $totalWorkedAll,
                 'totalOvertimeAll'           => $totalOvertimeAll,
                 'totalLimitAll'              => $totalLimitAll,
                 'totalOvertimeTillLastMonth' => $totalOvertimeTillLastMonth,
+                'currentPayout'              => $currentPayout,
                 'selectedMonth'              => $selectedMonth,
                 'selectedYear'               => $selectedYear,
                 'currentYear'                => $currentYear,
@@ -219,15 +237,15 @@ class TimeEntryController extends Controller
         $selectedYear  = $year;
         $months        = __('messages.months');
 
-        $entries = TimeEntry::whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->orderBy('date', 'desc')
+        $entries = TimeEntry::whereMonth($this->_TIME_SELECTION_DATE, $month)
+            ->whereYear($this->_TIME_SELECTION_DATE, $year)
+            ->orderBy($this->_TIME_SELECTION_DATE, 'desc')
             ->get();
 
         // Calculate overtime till last month
         $entriesTillLastMonth       = TimeEntry::where(
             function ($query) use ($year, $month) {
-                $query->where('date', '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
+                $query->where($this->_TIME_SELECTION_DATE, '<', "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01");
             }
         )->get();
 
@@ -246,6 +264,14 @@ class TimeEntryController extends Controller
         $totalOvertimeAll           = max(0, $totalWorkedAll - $totalLimitAll);
         $overtime                   = max(0, $totalWorked - $monthlyLimit);
 
+        // Create range of years from first time entry + 5 years
+        $firstEntry                 = TimeEntry::orderBy($this->_TIME_SELECTION_DATE, 'asc')->first();
+        $firstYear                  = $firstEntry ? Carbon::parse($firstEntry->date)->year : now()->year;
+        $years                      = range($firstYear, $firstYear + 4);
+
+        // Get current payout amount
+        $currentPayout              = $this->calculateCurrentPayout();
+
         return view(
             'create', [
                 'entries'                    => $entries,
@@ -254,6 +280,7 @@ class TimeEntryController extends Controller
                 'monthlyLimit'               => $monthlyLimit,
                 'month'                      => $month,
                 'year'                       => $year,
+                'years'                      => $years,
                 'entryToEdit'                => $entryToEdit,
                 'selectedMonth'              => $selectedMonth,
                 'selectedYear'               => $selectedYear,
@@ -263,7 +290,8 @@ class TimeEntryController extends Controller
                 'totalWorkedAll'             => $totalWorkedAll,
                 'totalOvertimeAll'           => $totalOvertimeAll,
                 'totalOvertimeTillLastMonth' => $totalOvertimeTillLastMonth,
-                'totalLimitAll'              => $totalLimitAll
+                'totalLimitAll'              => $totalLimitAll,
+                'currentPayout'              => $currentPayout
             ]
         );
     }
@@ -398,7 +426,7 @@ class TimeEntryController extends Controller
      * @return int
      */
     public function calculateMonthlyLimit() : int {
-        return $this->_limitMinijob / $this->_hourlyWage;
+        return $this->_LIMIT_MINIJOB / $this->_HOURLY_WAGE;
     }
 
     /**
@@ -441,6 +469,58 @@ class TimeEntryController extends Controller
         return redirect()
             ->route('edit-defaults')
             ->with('success', 'Default values updated!');
+    }
+
+    /**
+     * Calculate the current payout amount based on the total hours worked and hourly wage.
+     * 
+     * @access public
+     * @return array
+     */
+    public function calculateCurrentPayout() : array {
+        $totalWorked  = TimeEntry::all()->sum('hours_worked');
+        $hourlyWage   = $this->getHourlyWage();
+        $minijobLimit = $this->getMinijobLimit();
+        $maxHours     = $minijobLimit / $hourlyWage;
+
+        // TODO:
+        // Add the rest to the next months payout if the total worked hours exceed the minijob limit
+        // This is a simple implementation, you might want to store the rest in a database or
+        // handle it differently based on your requirements.
+        // If total worked hours exceed the max hours for minijob, calculate the rest hours
+        if ($totalWorked > $maxHours) {
+            $restHours = $totalWorked - $maxHours;
+            $this->_setSetting('rest_hours', $restHours);
+        } else {
+            $this->_setSetting('rest_hours', 0);
+        }
+
+        // If total worked hours multiplied by hourly wage exceeds the minijob limit,
+        // calculate the rest hours and cap the payout to the minijob limit
+        if ($totalWorked * $hourlyWage > $minijobLimit && $totalWorked > $maxHours) {
+            $restHours = $totalWorked - $maxHours;
+            $this->_setSetting('rest_hours', $restHours);
+        } else {
+            $this->_setSetting('rest_hours', 0);
+        }
+
+        if ($totalWorked * $hourlyWage > $minijobLimit) {
+            $restHours = $totalWorked - $maxHours;
+
+            // If total worked hours exceed the minijob limit, cap the payout to the limit
+            return [
+                'currentPayout' => $this->getMinijobLimit(),
+                'rest'          => $restHours * $hourlyWage,
+                'restHours'     => $restHours
+            ];
+        }
+
+        // Calculate the payout based on total worked hours and hourly wage
+        return [
+            'currentPayout' => $totalWorked * $hourlyWage,
+            'rest'          => 0,
+            'restHours'     => 0
+        ];
     }
 
     /**

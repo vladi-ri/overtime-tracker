@@ -29,6 +29,9 @@
         'edit'                           => 'Bearbeiten',
         'delete'                         => 'Löschen',
         'are_you_sure'                   => 'Möchten Sie diesen Eintrag wirklich löschen?',
+        'current_payout'                 => 'Aktueller Auszahlungsbetrag',
+        'euro'                           => '€',
+        'rest'                           => 'Restbetrag gesamt',
         'months'                         => [
             1  => 'Januar',
             2  => 'Februar',

@@ -213,6 +213,25 @@
         <p>{{ __('messages.no_entries') }}</p>
     @endif
 
+    {{-- Show current payout amount --}}
+    <div class="alert alert-info mt-3">
+        <strong>{{ __('messages.current_payout') }}:</strong>
+        {{ number_format($currentPayout['currentPayout'], 2) }} {{ __('messages.euro') }}
+        <br>
+    </div>
+
+    {{-- Show rest amount --}}
+    <div class="alert alert-info mt-3">
+        <strong>{{ __('messages.rest') }}:</strong>
+        <span class="alert alert-danger">
+            <b>
+                {{ number_format($currentPayout['rest'], 2) }} {{ __('messages.euro') }}
+                ({{ number_format($currentPayout['restHours'], 2) }} {{ __('messages.hours') }})
+            </b>
+        </span>
+        <br>
+    </div>
+
     {{-- Show overtime counter --}}
     <div class="alert {{ $overtime > 0 ? 'alert-danger' : 'alert-success' }} mt-3">
         <strong>{{ __('messages.this_month') }}</strong>
