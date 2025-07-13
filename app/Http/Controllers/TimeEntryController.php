@@ -46,6 +46,24 @@ class TimeEntryController extends Controller
     private int $_LIMIT_MINIJOB          = 556;
 
     /**
+     * Default break time in minutes
+     * 
+     * @access private
+     * @var    int
+     * 
+     * @default 15
+     */
+    private int $_DEFAULT_BREAK_TIME     = 15;
+
+    /**
+     * Number of minutes in an hour
+     * 
+     * @access private
+     * @var    int
+     */
+    private int $_HOUR_IN_MINUTES        = 60;
+
+    /**
      * Time selection date key for eloquent queries.
      * 
      * @access private
@@ -172,13 +190,13 @@ class TimeEntryController extends Controller
 
         // Calculate total minutes worked
         $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
-        $hours         = $minutesWorked / 60;
+        $hours         = $minutesWorked / $this->_HOUR_IN_MINUTES;
 
         // Prevent negative values
         $minutesWorked = max(0, $minutesWorked);
 
         // Always calculate break based on hours worked
-        $break         = $hours <= 6 ? 15 : 30;
+        $break         = $this->calculateMinimumBreakTime($hours);
 
         // If 'no_break' is set, set break_minutes to 0
         if ($request->has('no_break')) {
@@ -312,7 +330,7 @@ class TimeEntryController extends Controller
             [
                 'date'          => 'required|date',
                 'start_time'    => 'required|date_format:H:i',
-                'end_time'      => 'required|date_format:H:i|after:start_time',
+                'end_time'      => 'required|date_format:H:i',
                 'break_minutes' => 'nullable|integer|min:0|max:480'
             ]
         );
@@ -326,8 +344,8 @@ class TimeEntryController extends Controller
 
         // Calculate minutes worked (without break)
         $minutesWorked = $start && $end ? $start->diffInMinutes($end) : 0;
-        $hours         = $minutesWorked / 60;
-        $break         = $hours <= 6 ? 15 : 30;
+        $hours         = $minutesWorked / $this->_HOUR_IN_MINUTES;
+        $break         = $this->calculateMinimumBreakTime($hours);
 
         // If 'no_break' is set, set break_minutes to 0
         if ($request->has('no_break')) {
@@ -521,6 +539,28 @@ class TimeEntryController extends Controller
             'rest'          => 0,
             'restHours'     => 0
         ];
+    }
+
+    /**
+     * Calculate break time based on hours worked.
+     * 
+     * @param int $hoursWorked The number of hours worked
+     * 
+     * @access public
+     * @return int
+     */
+    public function calculateMinimumBreakTime(int $hoursWorked) : int {
+        // Calculate break time based on hours worked
+        if ($hoursWorked <= 6) {
+            // 15 minutes for up to 6 hours
+            return $this->_DEFAULT_BREAK_TIME;
+        } else if ($hoursWorked > 6 && $hoursWorked <= 10) {
+            // 30 minutes for more than 6 hours
+            return $this->_DEFAULT_BREAK_TIME * 2;
+        } else {
+            // 45 minutes for more than 10 hours
+            return $this->_DEFAULT_BREAK_TIME * 3;
+        }
     }
 
     /**
